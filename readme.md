@@ -23,6 +23,10 @@ If these environment variables are configured, when the app is built or starts l
 The source code and source maps will be uploaded to Sentry, too.
 After starting the application, if an error occurs, the errors will be sent to Sentry, and will be linked to the specified release.
 
+## Event limits
+
+The SSR server process, and each page in the browser, sends at most `RAZZLE_SENTRY_MAX_EVENTS_PER_HOUR` error events an hour (default `60`), with up to `RAZZLE_SENTRY_MAX_EVENTS_BURST` at once (default `20`), and at most `RAZZLE_SENTRY_MAX_EVENTS_PER_ERROR` an hour for any one error (default `10`). The counts refill continuously; `0` turns a limit off. The variables are read at runtime, from `process.env` on the server and `window.env` in the browser. Your own `beforeSend` runs first, so the events it drops don't count. Transactions are not limited.
+
 ## Upgrade
 
 This version requires `@plone/volto >= 16.0.0.alpha.45` (`sentry` removed from Volto Core).
