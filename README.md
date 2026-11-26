@@ -23,6 +23,24 @@ If these environment variables are configured, when the app is built or starts l
 The source code and source maps will be uploaded to Sentry, too.
 After starting the application, if an error occurs, the errors will be sent to Sentry, and will be linked to the specified release.
 
+## Event limits
+
+A fault that repeats on every request or render, or in a loop, can send thousands of events a
+minute and use up a month's Sentry quota. The SSR server process, and each page in the browser,
+therefore sends at most:
+
+  * `RAZZLE_SENTRY_MAX_EVENTS_PER_HOUR` error events an hour (default `60`), with up to
+    `RAZZLE_SENTRY_MAX_EVENTS_BURST` at once (default `20`);
+  * `RAZZLE_SENTRY_MAX_EVENTS_PER_ERROR` events an hour for any one error (default `10`). An
+    error is the exception type and the line that threw it, or the message.
+
+The counts refill continuously, so after a burst events flow again at the hourly rate. `0` turns a
+limit off; set both `RAZZLE_SENTRY_MAX_EVENTS_PER_HOUR` and `RAZZLE_SENTRY_MAX_EVENTS_PER_ERROR`
+to `0` to send everything. The variables are read at runtime, on the server from `process.env`
+and in the browser from `window.env`. A malformed value falls back to the default with a console
+warning. Your own `beforeSend` (from `settings.sentryOptions`) runs first, so the events it drops
+don't count. Transactions are not limited.
+
 ## Upgrade
 
 ### 2.0.0
