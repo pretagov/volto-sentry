@@ -81,7 +81,9 @@ const initSentry = (libraries) => {
     }
     // Cap the events this server process or browser page sends, so a fault
     // that repeats on every request or render cannot use up the quota.
-    const env = __SERVER__ ? process.env : window?.env;
+    // Checked at run time: the server build can leave __SERVER__ undefined
+    // here, which threw a ReferenceError as soon as a DSN was set.
+    const env = typeof window === 'undefined' ? process.env : window.env;
     sentry_options.beforeSend = withEventLimits(
       sentry_options.beforeSend,
       readLimits(env || {}),
