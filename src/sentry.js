@@ -1,4 +1,5 @@
 import config from '@plone/volto/registry';
+import { readLimits, withEventLimits } from './rateLimit';
 
 const reserved_option_names = ['tags', 'extras'];
 
@@ -78,6 +79,15 @@ const initSentry = (libraries) => {
         }
       });
     }
+    // Cap the events this server process or browser page sends, so a fault
+    // that repeats on every request or render cannot use up the quota.
+    // Checked at run time: the server build can leave __SERVER__ undefined
+    // here, which threw a ReferenceError as soon as a DSN was set.
+    const env = typeof window === 'undefined' ? process.env : window.env;
+    sentry_options.beforeSend = withEventLimits(
+      sentry_options.beforeSend,
+      readLimits(env || {}),
+    );
     Sentry.init(sentry_options);
     if (sentry_options?.tags) {
       Sentry.setTags(sentry_options.tags);
